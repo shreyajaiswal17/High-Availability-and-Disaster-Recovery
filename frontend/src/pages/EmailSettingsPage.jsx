@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react';
-// Adjust this path to match your actual bindings folder — Wails names it
-// after your go.mod module name. Check frontend/bindings/ after running
-// `wails3 dev` or `wails3 generate bindings` to see the real path.
-import { EmailService } from '../../bindings/changeme/index';
+import { EmailService } from '../../bindings/HADR/index';
 import { emailSettingsData } from '../data/sampleData';
 
 const INPUT_CLASS =
