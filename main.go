@@ -30,6 +30,7 @@ func main() {
 		Description: "HADR Management",
 		Services: []application.Service{
 			application.NewService(&EmailService{}),
+			application.NewService(&NotificationService{}),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
@@ -37,6 +38,7 @@ func main() {
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
+		
 	})
 
 	// Create a new window with the necessary options.
