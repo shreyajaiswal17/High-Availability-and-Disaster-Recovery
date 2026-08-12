@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.3.2",
     "@tailwindcss/vite": "^4.3.3",
     "@wailsio/runtime": "latest",
+    "antd": "^6.6.0",
     "lucide-react": "^1.28.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
