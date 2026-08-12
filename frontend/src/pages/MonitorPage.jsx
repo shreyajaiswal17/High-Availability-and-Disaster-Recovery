@@ -29,6 +29,8 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 // ---------------------------------------------------------------------------
 const MAX_POINTS = 15;
 
+// Slightly larger swing so the line reads as jagged/spiky rather than a
+// gentle wobble — matches the reference screenshot's sharp up/down ticks.
 function stepMetric(prev, min, max, change) {
   let next = prev + (Math.random() * change * 2 - change);
   if (next < min) next = min;
@@ -50,10 +52,10 @@ function useLiveMetrics() {
     const interval = setInterval(() => {
       setLatest((prev) => {
         const next = {
-          cpu: stepMetric(prev.cpu, 40, 90, 3),
-          memory: stepMetric(prev.memory, 45, 85, 2),
-          latency: stepMetric(prev.latency, 5, 30, 2),
-          lag: stepMetric(prev.lag, 0.1, 3, 0.2),
+          cpu: stepMetric(prev.cpu, 40, 90, 6),
+          memory: stepMetric(prev.memory, 45, 85, 5),
+          latency: stepMetric(prev.latency, 5, 30, 4),
+          lag: stepMetric(prev.lag, 0.1, 3, 0.3),
           health: stepMetric(prev.health, 99.6, 100, 0.02),
         };
 
@@ -84,26 +86,26 @@ function useLiveMetrics() {
 }
 
 // ---------------------------------------------------------------------------
-// UDM-Pro-style dark dashboard, inlined below. cardStyle/titleStyle/linkStyle
-// give every antd Card the same dark-panel look regardless of the app's
-// (light) global theme, matching the UniFi screenshot.
+// Light dashboard, styled to match the app's default (light) theme instead
+// of the dark UDM-Pro look. cardStyle/titleStyle/linkStyle now use light
+// panel colors so this section blends with the rest of the app.
 // ---------------------------------------------------------------------------
-const DONUT_COLORS = ["#3b82f6", "#22d3ee", "#a855f7", "#f59e0b"];
+const DONUT_COLORS = ["#3b82f6", "#06b6d4", "#a855f7", "#f59e0b"];
 
 const cardStyle = {
-  background: "#0f1420",
-  border: "1px solid rgba(255,255,255,0.06)",
+  background: "#ffffff",
+  border: "1px solid #e2e8f0",
 };
-const titleStyle = { color: "#e2e8f0", fontSize: 13, fontWeight: 600 };
-const linkStyle = { color: "#60a5fa", fontSize: 12 };
+const titleStyle = { color: "#1e293b", fontSize: 13, fontWeight: 600 };
+const linkStyle = { color: "#2563eb", fontSize: 12 };
 
 function KpiStrip({ metrics }) {
   const items = [
-    { label: "CPU Usage", value: metrics.cpu, suffix: "%", color: "#3b82f6" },
-    { label: "Memory Usage", value: metrics.memory, suffix: "%", color: "#22d3ee" },
-    { label: "Network Latency", value: metrics.latency, suffix: " ms", color: "#f59e0b" },
-    { label: "Replication Lag", value: metrics.lag, suffix: " s", color: "#ef4444" },
-    { label: "Cluster Health", value: metrics.health, suffix: "%", color: "#22c55e" },
+    { label: "CPU Usage", value: metrics.cpu, suffix: "%", color: "#2563eb" },
+    { label: "Memory Usage", value: metrics.memory, suffix: "%", color: "#0891b2" },
+    { label: "Network Latency", value: metrics.latency, suffix: " ms", color: "#d97706" },
+    { label: "Replication Lag", value: metrics.lag, suffix: " s", color: "#dc2626" },
+    { label: "Cluster Health", value: metrics.health, suffix: "%", color: "#16a34a" },
   ];
 
   return (
@@ -111,7 +113,7 @@ function KpiStrip({ metrics }) {
       {items.map((item) => (
         <Card key={item.label} size="small" bordered={false} style={cardStyle}>
           <Statistic
-            title={<span className="text-[11px] uppercase tracking-wide text-slate-400">{item.label}</span>}
+            title={<span className="text-[11px] uppercase tracking-wide text-slate-500">{item.label}</span>}
             value={item.value}
             precision={item.suffix === "%" ? 1 : 2}
             suffix={item.suffix}
@@ -151,18 +153,18 @@ function ResourceDonut({ metrics }) {
             </PieChart>
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-lg font-bold text-white">{total.toFixed(0)}</span>
-            <span className="text-[10px] uppercase tracking-wide text-slate-400">Total Load</span>
+            <span className="text-lg font-bold text-slate-800">{total.toFixed(0)}</span>
+            <span className="text-[10px] uppercase tracking-wide text-slate-500">Total Load</span>
           </div>
         </div>
         <div className="flex-1 space-y-2 text-xs">
           {data.map((d, i) => (
             <div key={d.name} className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-slate-300">
+              <span className="flex items-center gap-2 text-slate-600">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }} />
                 {d.name}
               </span>
-              <span className="font-semibold text-slate-100">{d.value.toFixed(1)}</span>
+              <span className="font-semibold text-slate-800">{d.value.toFixed(1)}</span>
             </div>
           ))}
         </div>
@@ -184,12 +186,12 @@ function ClusterHealthRing({ health, nodesOnline, nodesTotal }) {
           type="circle"
           percent={health}
           size={140}
-          strokeColor={{ "0%": "#22d3ee", "100%": "#3b82f6" }}
-          trailColor="rgba(255,255,255,0.08)"
+          strokeColor={{ "0%": "#06b6d4", "100%": "#2563eb" }}
+          trailColor="#f1f5f9"
           format={() => (
             <div className="flex flex-col items-center">
-              <span className="text-2xl font-bold text-white">{nodesOnline}</span>
-              <span className="text-[10px] uppercase tracking-wide text-slate-400">of {nodesTotal} Online</span>
+              <span className="text-2xl font-bold text-slate-800">{nodesOnline}</span>
+              <span className="text-[10px] uppercase tracking-wide text-slate-500">of {nodesTotal} Online</span>
             </div>
           )}
         />
@@ -208,7 +210,7 @@ function MostActiveServers({ servers }) {
       extra={<a style={linkStyle}>See All</a>}
     >
       {configured.length === 0 ? (
-        <Empty description={<span className="text-xs text-slate-500">No Active Servers</span>} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        <Empty description={<span className="text-xs text-slate-400">No Active Servers</span>} image={Empty.PRESENTED_IMAGE_SIMPLE} />
       ) : (
         <div className="flex flex-wrap gap-4">
           {configured.map((s) => (
@@ -218,7 +220,7 @@ function MostActiveServers({ servers }) {
                 icon={<Server className="h-4 w-4" />}
                 style={{ backgroundColor: s.status === "online" ? "#059669" : "#dc2626" }}
               />
-              <span className="max-w-[64px] truncate text-[11px] text-slate-300">{s.host}</span>
+              <span className="max-w-[64px] truncate text-[11px] text-slate-600">{s.host}</span>
             </div>
           ))}
         </div>
@@ -235,7 +237,7 @@ function ReplicationEndpoints() {
       title={<span style={titleStyle}>Replication Endpoints</span>}
       extra={<a style={linkStyle}>See All</a>}
     >
-      <Empty description={<span className="text-xs text-slate-500">No Active Endpoints</span>} image={Empty.PRESENTED_IMAGE_SIMPLE} />
+      <Empty description={<span className="text-xs text-slate-400">No Active Endpoints</span>} image={Empty.PRESENTED_IMAGE_SIMPLE} />
     </Card>
   );
 }
@@ -266,26 +268,44 @@ function ClusterActivityChart({ history }) {
         <AreaChart data={history}>
           <defs>
             <linearGradient id="cpuGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.5} />
-              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+              <stop offset="5%" stopColor="#2563eb" stopOpacity={0.35} />
+              <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="memGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#a855f7" stopOpacity={0.4} />
+              <stop offset="5%" stopColor="#a855f7" stopOpacity={0.3} />
               <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-          <XAxis dataKey="time" tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fill: "#64748b", fontSize: 10 }} axisLine={false} tickLine={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+          <XAxis dataKey="time" tick={{ fill: "#94a3b8", fontSize: 10 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: "#94a3b8", fontSize: 10 }} axisLine={false} tickLine={false} />
           <Tooltip
-            contentStyle={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", fontSize: 12 }}
-            labelStyle={{ color: "#94a3b8" }}
+            contentStyle={{ background: "#ffffff", border: "1px solid #e2e8f0", fontSize: 12 }}
+            labelStyle={{ color: "#475569" }}
           />
           {(view === "All" || view === "CPU") && (
-            <Area type="monotone" dataKey="cpu" name="CPU" stroke="#3b82f6" fill="url(#cpuGradient)" strokeWidth={2} />
+            <Area
+              type="linear"
+              dataKey="cpu"
+              name="CPU"
+              stroke="#2563eb"
+              fill="url(#cpuGradient)"
+              strokeWidth={1.5}
+              dot={false}
+              isAnimationActive={false}
+            />
           )}
           {(view === "All" || view === "Memory") && (
-            <Area type="monotone" dataKey="memory" name="Memory" stroke="#a855f7" fill="url(#memGradient)" strokeWidth={2} />
+            <Area
+              type="linear"
+              dataKey="memory"
+              name="Memory"
+              stroke="#a855f7"
+              fill="url(#memGradient)"
+              strokeWidth={1.5}
+              dot={false}
+              isAnimationActive={false}
+            />
           )}
         </AreaChart>
       </ResponsiveContainer>
@@ -298,8 +318,8 @@ function ClusterOverview({ metrics, history, servers }) {
   const nodesTotal = servers.filter((s) => s.host).length;
 
   return (
-    <ConfigProvider theme={{ algorithm: theme.darkAlgorithm, token: { colorBgContainer: "#0f1420" } }}>
-      <div className="rounded-xl bg-[#0b0e1a] p-4 ring-1 ring-white/5 sm:p-6">
+    <ConfigProvider theme={{ algorithm: theme.defaultAlgorithm, token: { colorBgContainer: "#ffffff" } }}>
+      <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200 sm:p-6">
         <div className="mb-4">
           <KpiStrip metrics={metrics} />
         </div>
@@ -326,9 +346,6 @@ function ClusterOverview({ metrics, history, servers }) {
 // MonitorPage
 // ---------------------------------------------------------------------------
 export default function MonitorPage() {
-  // Cluster data now lives in the shared store — Settings writes to it,
-  // Monitor reads and writes it, and Application Services reads it too, so
-  // all three pages stay in sync automatically.
   const servers = useClusterStore((state) => state.servers);
   const replication = useClusterStore((state) => state.replication);
   const { latest: liveMetrics, history: metricsHistory } = useLiveMetrics();
@@ -350,9 +367,9 @@ export default function MonitorPage() {
     primary: null,
     standby: null,
   });
-  const [clusterLoading, setClusterLoading] = useState(null); // 'switchover' | 'vm-manager' | null
+  const [clusterLoading, setClusterLoading] = useState(null);
   const [editingServer, setEditingServer] = useState(null);
-  const [confirmAction, setConfirmAction] = useState(null); // { nodeKey, action }
+  const [confirmAction, setConfirmAction] = useState(null);
   const [banner, setBanner] = useState(null);
 
   const showBanner = (message) => {
@@ -373,8 +390,6 @@ export default function MonitorPage() {
     }
 
     if (action === "failover") {
-      // Promote the standby, demote the current primary. Host/IP stay with
-      // the physical server slot — only the Primary/Secondary role swaps.
       swapPrimaryStandby();
       showBanner(`Failover complete. ${nodes.standby.name} is now Primary.`);
     }
