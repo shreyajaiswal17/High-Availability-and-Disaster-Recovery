@@ -8,6 +8,7 @@ export default function ServerCard({
   node,
   disableOnline = false,
   disableFailover = false,
+  disableShutdown = false,
   loadingAction = null, // 'online' | 'failover' | 'shutdown' | null
   onOnline,
   onFailover,
@@ -47,10 +48,11 @@ export default function ServerCard({
           Failover
         </Button>
         <Button
+          disabled={disableShutdown}
           loading={loadingAction === 'shutdown'}
           onClick={onShutdown}
           className="hover:bg-red-50 hover:text-red-700 hover:ring-red-200"
-          title="Shut down this node"
+          title={disableShutdown ? 'Node is already offline' : 'Shut down this node'}
         >
           Shutdown
         </Button>

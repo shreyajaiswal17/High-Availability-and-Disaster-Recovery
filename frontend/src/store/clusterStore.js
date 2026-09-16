@@ -184,7 +184,14 @@ export function computeMonitorNodes(servers) {
       status: s.status === 'online' ? 'online' : 'offline',
     };
 
-  return { primary: toNode(primary), standby: toNode(standby) };
+  // The Monitor cards are anchored to the two physical server slots, so a
+  // failover swaps the Primary/Secondary labels in place instead of moving
+  // hostnames/IPs between card positions.
+  const slots = ['primary-01', 'standby-01']
+    .map((id) => servers.find((s) => s.id === id))
+    .map(toNode);
+
+  return { primary: toNode(primary), standby: toNode(standby), slots };
 }
 
 export function computeReplicationStatus(servers, replication) {

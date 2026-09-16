@@ -364,8 +364,8 @@ export default function MonitorPage() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
 
   const [nodeLoading, setNodeLoading] = useState({
-    primary: null,
-    standby: null,
+    'primary-01': null,
+    'standby-01': null,
   });
   const [clusterLoading, setClusterLoading] = useState(null);
   const [editingServer, setEditingServer] = useState(null);
@@ -377,11 +377,11 @@ export default function MonitorPage() {
     setTimeout(() => setBanner(null), 3500);
   };
 
-  const runNodeAction = async (nodeKey, action) => {
-    setNodeLoading((prev) => ({ ...prev, [nodeKey]: action }));
+  const runNodeAction = async (nodeId, action) => {
+    setNodeLoading((prev) => ({ ...prev, [nodeId]: action }));
     await wait(1000);
 
-    const node = nodes[nodeKey];
+    const node = nodes.slots.find((n) => n.id === nodeId);
 
     if (action === "shutdown") {
       setServerStatus(node.id, "offline");
@@ -399,15 +399,15 @@ export default function MonitorPage() {
       showBanner(`${node.name} is back online.`);
     }
 
-    setNodeLoading((prev) => ({ ...prev, [nodeKey]: null }));
+    setNodeLoading((prev) => ({ ...prev, [nodeId]: null }));
   };
 
-  const handleNodeAction = (nodeKey, action) => {
+  const handleNodeAction = (nodeId, action) => {
     if (action === "failover" || action === "shutdown") {
-      setConfirmAction({ nodeKey, action });
+      setConfirmAction({ nodeKey: nodeId, action });
       return;
     }
-    runNodeAction(nodeKey, action);
+    runNodeAction(nodeId, action);
   };
 
   const handleConfirm = async () => {
@@ -477,24 +477,19 @@ export default function MonitorPage() {
       )}
 
       <div className="flex flex-col items-center gap-8 sm:flex-row sm:justify-center sm:gap-16">
-        <ServerCard
-          node={nodes.primary}
-          disableOnline={nodes.primary.status === "online"}
-          disableFailover={true}
-          loadingAction={nodeLoading.primary}
-          onOnline={() => handleNodeAction("primary", "online")}
-          onFailover={() => handleNodeAction("primary", "failover")}
-          onShutdown={() => handleNodeAction("primary", "shutdown")}
-        />
-        <ServerCard
-          node={nodes.standby}
-          disableOnline={nodes.standby.status === "online"}
-          disableFailover={nodes.standby.status !== "online"}
-          loadingAction={nodeLoading.standby}
-          onOnline={() => handleNodeAction("standby", "online")}
-          onFailover={() => handleNodeAction("standby", "failover")}
-          onShutdown={() => handleNodeAction("standby", "shutdown")}
-        />
+        {nodes.slots.map((node) => (
+          <ServerCard
+            key={node.id}
+            node={node}
+            disableOnline={node.status === "online"}
+            disableFailover={node.role !== "Secondary" || node.status !== "online"}
+            disableShutdown={node.status !== "online"}
+            loadingAction={nodeLoading[node.id]}
+            onOnline={() => handleNodeAction(node.id, "online")}
+            onFailover={() => handleNodeAction(node.id, "failover")}
+            onShutdown={() => handleNodeAction(node.id, "shutdown")}
+          />
+        ))}
       </div>
       <ReplicationStatus data={replicationStatus} />
 
